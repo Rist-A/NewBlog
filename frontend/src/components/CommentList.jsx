@@ -1,65 +1,57 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import back2 from "../Asset/back2.png";
+import editt from "../Asset/editt.png";
+import deletee from "../Asset/deletee.png";
 
-const CommentList = ({ postId, onClose }) => {
+const CommentList = ({ postId }) => {
   const [comments, setComments] = useState([]);
-  const [users, setUsers] = useState({}); // Store user details separately
-  const [newComment, setNewComment] = useState(""); // State for new comment input
-  const [error, setError] = useState(null); // Handle errors
+  const [newComment, setNewComment] = useState("");
+  const [error, setError] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editedCommentContent, setEditedCommentContent] = useState("");
+  const navigate = useNavigate();
 
+  // Fetch comments with data transformation
   useEffect(() => {
     const fetchComments = async () => {
       try {
         const response = await fetch(`http://localhost:5000/posts/${postId}/comments`);
         if (!response.ok) throw new Error("Failed to fetch comments");
         const data = await response.json();
-        setComments(data);
-
-        // Fetch user details for each comment separately
-        const userPromises = data.map((comment) => fetchUser(comment.author_id));
-        const usersData = await Promise.all(userPromises);
-
-        // Store user data in state
-        const usersMap = {};
-        usersData.forEach((user) => {
-          if (user) usersMap[user.id] = user;
-        });
-        setUsers(usersMap);
+        
+        // Transform data to match frontend expectations
+        const transformedComments = data.map(comment => ({
+          ...comment,
+          user: {
+            id: comment.author?.id,
+            username: comment.author?.user_name,
+            avatar_url: comment.author?.user_image,
+          },
+          user_id: comment.author?.id
+        }));
+        
+        setComments(transformedComments);
       } catch (error) {
         console.error("Error fetching comments:", error);
+        setError("Failed to load comments");
       }
     };
 
     fetchComments();
   }, [postId]);
 
-  // Fetch user details
-  const fetchUser = async (userId) => {
-    try {
-      const response = await fetch(`http://localhost:5000/users/${userId}`);
-      if (!response.ok) return null;
-      return await response.json();
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      return null;
-    }
-  };
-
-  // Extract capital letters for avatar fallback
-  function extractCapitalLetters(inputString) {
-    return inputString.replace(/[^A-Z]/g, "");
-  }
-
   // Handle new comment submission
   const handleSubmitComment = async () => {
     if (!newComment.trim()) {
-      alert("Comment cannot be empty.");
+      setError("Comment cannot be empty");
       return;
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       if (!token) {
-        alert("You need to log in to post a comment.");
+        navigate("/login", { state: { from: `/posts/${postId}` } });
         return;
       }
 
@@ -73,96 +65,206 @@ const CommentList = ({ postId, onClose }) => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to submit comment.");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to post comment");
       }
 
       const newCommentData = await response.json();
-      setComments([...comments, newCommentData]); // Update comments list
-      setNewComment(""); // Clear input field
-      setError(null); // Clear errors
+      
+      // Transform the new comment to match structure
+      const transformedComment = {
+        ...newCommentData,
+        user: {
+          id: newCommentData.author?.id,
+          username: newCommentData.author?.user_name,
+          avatar_url: newCommentData.author?.user_image,
+        },
+        user_id: newCommentData.author?.id
+      };
+      
+      setComments(prev => [transformedComment, ...prev]);
+      setNewComment("");
+      setError(null);
     } catch (error) {
-      console.error("Error submitting comment:", error);
-      setError("Failed to submit comment. Please try again.");
+      console.error("Error posting comment:", error);
+      setError(error.message);
+    }
+  };
+
+  // Handle edit comment
+  const handleEditComment = async (commentId) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        navigate("/login", { state: { from: `/posts/${postId}` } });
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/comments/${commentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content: editedCommentContent }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update comment");
+      }
+
+      const updatedComment = await response.json();
+      
+      // Transform the updated comment
+      const transformedComment = {
+        ...updatedComment,
+        user: {
+          id: updatedComment.author?.id,
+          username: updatedComment.author?.user_name,
+          avatar_url: updatedComment.author?.user_image,
+        },
+        user_id: updatedComment.author?.id
+      };
+      
+      setComments(prev =>
+        prev.map(comment =>
+          comment.id === commentId ? transformedComment : comment
+        )
+      );
+      setEditingCommentId(null);
+      setError(null);
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      setError(error.message);
+    }
+  };
+
+  // Handle delete comment
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        navigate("/login", { state: { from: `/posts/${postId}` } });
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/comments/${commentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete comment");
+      }
+
+      setComments(prev => prev.filter(comment => comment.id !== commentId));
+      setError(null);
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      setError(error.message);
     }
   };
 
   return (
-    <div className="w-full bg-white shadow-lg rounded-lg overflow-hidden flex flex-col mt-2">
-      {/* Close Button */}
-      <div className="flex justify-end p-2">
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
+    <div className="w-full bg-gray-800 shadow-lg rounded-lg overflow-hidden flex flex-col mt-2">
+      <button
+        onClick={() => navigate(-1)}
+        className="p-2 bg-gray-700 text-white hover:bg-gray-600 focus:outline-none"
+      >
+        <img src={back2} alt="Back" className="h-6 w-6" />
+      </button>
 
-      {/* Error Message */}
       {error && (
         <div className="p-4 bg-red-100 text-red-700 rounded-md mx-4 mt-2">
           {error}
         </div>
       )}
 
-      {/* Comments List */}
-<ul role="list" className="flex-1 overflow-y-auto px-4 py-2 divide-y divide-gray-200">
-  {comments.map((comment) => {
-    // Find the user object from the users table where the id matches the comment's author_id
-    const user = users.find(user => user.id === comment.author_id) || {};
-
-    return (
-      <li key={comment.id} className="flex justify-between gap-x-4 py-3">
-        <div className="flex min-w-0 gap-x-3">
-          {/* Avatar with fallback */}
-          <div className="h-8 w-8 flex-none rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm">
-            {user.image_url ? (
-              <img
-                src={user.image_url}
-                alt={user.user_name || "User"}
-                className="h-full w-full rounded-full object-cover"
-                onError={(e) => { e.target.onerror = null; e.target.src = "/default-avatar.png"; }}
-              />
-            ) : (
-              <span>{extractCapitalLetters(user.user_name || "U")}</span>
+      <ul className="flex-1 overflow-y-auto px-4 py-2 divide-y divide-gray-700">
+        {comments.map((comment) => (
+          <li key={comment.id} className="flex justify-between gap-x-4 py-3">
+            <div className="flex min-w-0 gap-x-3">
+              <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                {comment.user?.avatar_url ? (
+                  <img
+                    src={comment.user.avatar_url}
+                    alt={comment.user.username}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-gray-600 font-bold text-sm">
+                    {comment.user?.username?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0 flex-auto">
+                <p className="text-sm font-semibold text-white">
+                  {comment.user?.username || 'Unknown User'}
+                </p>
+                {editingCommentId === comment.id ? (
+                  <textarea
+                    value={editedCommentContent}
+                    onChange={(e) => setEditedCommentContent(e.target.value)}
+                    className="w-full p-2 border border-gray-600 rounded-md bg-gray-700 text-white"
+                    rows={2}
+                  />
+                ) : (
+                  <p className="mt-1 text-xs text-gray-300 break-words">
+                    {comment.content}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">
+                  {new Date(comment.createdAt).toLocaleString()}
+                </p>
+              </div>
+            </div>
+            {comment.user_id === sessionStorage.getItem("userId") && (
+              <div className="flex items-center gap-2">
+                {editingCommentId === comment.id ? (
+                  <button
+                    onClick={() => handleEditComment(comment.id)}
+                    className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
+                  >
+                    Save
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setEditingCommentId(comment.id);
+                      setEditedCommentContent(comment.content);
+                    }}
+                    className="p-1"
+                  >
+                    <img src={editt} alt="Edit" className="h-5 w-5" />
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDeleteComment(comment.id)}
+                  className="p-1"
+                >
+                  <img src={deletee} alt="Delete" className="h-5 w-5" />
+                </button>
+              </div>
             )}
-          </div>
-          <div className="min-w-0 flex-auto">
-            <p className="text-sm font-semibold text-gray-900">{user.user_name || "Unknown User"}</p>
-            <p className="mt-1 text-xs text-gray-500 break-words">{comment.content}</p>
-          </div>
-        </div>
-      </li>
-    );
-  })}
-</ul>
-     
+          </li>
+        ))}
+      </ul>
 
-      {/* Input field and submit button for new comments */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-700">
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Write a comment..."
-          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          className="w-full p-2 border border-gray-600 rounded-md bg-gray-700 text-white"
           rows={2}
         />
         <button
           onClick={handleSubmitComment}
-          className="mt-2 w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          className="mt-2 w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
         >
           Submit
         </button>
