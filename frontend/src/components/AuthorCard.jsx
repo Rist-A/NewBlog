@@ -7,7 +7,7 @@ const AuthorCard = () => {
   const [loading, setLoading] = useState(true);
 
   // Decode the JWT token to get the logged-in user's ID
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   console.log("Token:", token); // Debugging
 
   useEffect(() => {

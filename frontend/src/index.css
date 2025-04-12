@@ -3,6 +3,7 @@
 @tailwind utilities; */
 @import "tailwindcss";
 
+
 /* index.css */
 
 /* Keyframes for horizontal slide transitions */
@@ -38,3 +39,82 @@
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
       monospace;
   }
+  /* @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  
+  .animate-scroll {
+    display: flex;
+    animation: scroll 20s linear infinite;
+  } */
+
+  /* Default light theme styles */
+
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+@font-face {
+  font-family: 'head'; /* Custom name */
+  src:url('./Asset/fonts/Harithdemo.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.habesha-blog {
+  font-family: 'head', sans-serif;
+  font-size: 2rem;
+  color: white;
+}
+
+/* global.css */
+:root {
+  /* Light theme colors */
+  --light-background: #ffffff;
+  --light-foreground: #000000;
+  --light-primary: #2563eb;
+  --light-secondary: #f1f5f9;
+  --light-accent: #3b82f6;
+  --light-text: #1e293b;
+  --light-muted: #64748b;
+  
+  /* Dark theme colors */
+  --dark-background: #0f172a;
+  --dark-foreground: #f8fafc;
+  --dark-primary: #3b82f6;
+  --dark-secondary: #1e293b;
+  --dark-accent: #60a5fa;
+  --dark-text: #e2e8f0;
+  --dark-muted: #94a3b8;
+  
+  /* Common variables */
+  --radius: 0.5rem;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] {
+  --background: var(--light-background);
+  --foreground: var(--light-foreground);
+  --primary: var(--light-primary);
+  --secondary: var(--light-secondary);
+  --accent: var(--light-accent);
+  --text: var(--light-text);
+  --muted: var(--light-muted);
+}
+
+[data-theme="dark"] {
+  --background: var(--dark-background);
+  --foreground: var(--dark-foreground);
+  --primary: var(--dark-primary);
+  --secondary: var(--dark-secondary);
+  --accent: var(--dark-accent);
+  --text: var(--dark-text);
+  --muted: var(--dark-muted);
+}

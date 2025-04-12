@@ -1,0 +1,14 @@
+[data-theme="dark"] {
+    --bg-color: #1a1a1a; /* Dark background */
+    --text-color: #ffffff; /* White text */
+  }
+  
+  [data-theme="light"] {
+    --bg-color: #f3f4f6; /* Light background */
+    --text-color: #000000; /* Black text */
+  }
+  
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+  }
