@@ -6,7 +6,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
-// Define the schema for the form
 const postFormSchema = z.object({
   title: z
     .string()
@@ -23,21 +22,25 @@ const postFormSchema = z.object({
 });
 
 const EditPostForm = () => {
-  const { postId } = useParams(); // Get the post ID from the URL
+  const { postId } = useParams();
   const navigate = useNavigate();
-  const [post, setPost] = useState(null); // State to store the post data
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const {
     register,
     handleSubmit,
     setValue,
     reset,
-    formState: { errors },
+    watch,
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(postFormSchema),
   });
+
+  const watchImage = watch("image");
 
   // Fetch the post data when the component mounts
   useEffect(() => {
@@ -63,6 +66,10 @@ const EditPostForm = () => {
             title: response.data.title,
             content: response.data.content,
           });
+          // Set initial image preview
+          if (response.data.image_url) {
+            setImagePreview(response.data.image_url);
+          }
         } else {
           setError("Post not found.");
         }
@@ -77,6 +84,17 @@ const EditPostForm = () => {
     fetchPost();
   }, [postId, reset]);
 
+  // Handle image preview when a new image is selected
+  useEffect(() => {
+    if (watchImage && watchImage instanceof File) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(watchImage);
+    }
+  }, [watchImage]);
+
   // Handle form submission
   const onSubmit = async (data) => {
     const token = sessionStorage.getItem("token");
@@ -84,28 +102,29 @@ const EditPostForm = () => {
       setError("No token found. Please log in.");
       return;
     }
-
+  
     try {
-      // Convert the image file to base64 (if a new image is provided)
-      let imageBase64 = post.image_url; // Use the existing image URL by default
-      if (data.image) {
-        imageBase64 = await convertFileToBase64(data.image);
+      console.log("Attempting to update post with ID:", postId); // Add this
+      console.log("Form data:", data); // Add this
+  
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("content", data.content);
+      if (data.image instanceof File) {
+        formData.append("image", data.image);
       }
-
-      // Send the PUT request to update the post
+  
       const response = await axios.put(
         `http://localhost:5000/posts/${postId}`,
-        {
-          title: data.title,
-          content: data.content,
-          image_url: imageBase64,
-        },
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
         }
       );
+      // ...
 
       console.log("Post updated successfully:", response.data);
       alert("Post updated successfully!");
@@ -114,16 +133,6 @@ const EditPostForm = () => {
       console.error("Error updating post:", error.response?.data || error.message);
       setError(`Failed to update post: ${error.response?.data?.error || error.message}`);
     }
-  };
-
-  // Helper function to convert a file to base64
-  const convertFileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
   };
 
   if (loading) {
@@ -210,6 +219,15 @@ const EditPostForm = () => {
                 >
                   Image
                 </label>
+                {imagePreview && (
+                  <div className="mt-2 mb-4">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="max-h-60 rounded-md object-cover"
+                    />
+                  </div>
+                )}
                 <div className="mt-2">
                   <input
                     type="file"
@@ -220,6 +238,9 @@ const EditPostForm = () => {
                       const file = e.target.files?.[0];
                       if (file) {
                         setValue("image", file);
+                      } else {
+                        setValue("image", undefined);
+                        setImagePreview(post?.image_url || null);
                       }
                     }}
                   />
@@ -231,14 +252,16 @@ const EditPostForm = () => {
                 type="button"
                 className="rounded-md bg-gray-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-600"
                 onClick={() => reset()}
+                disabled={isSubmitting}
               >
                 Reset
               </button>
               <button
                 type="submit"
-                className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
+                disabled={isSubmitting}
               >
-                Update Post
+                {isSubmitting ? "Updating..." : "Update Post"}
               </button>
             </div>
           </div>
