@@ -160,7 +160,7 @@ const getUserProfile = async (req, res) => {
         title: post.title,
         content: post.content,
         status: post.status,
-        post_image: post.post_image || DEFAULT_POST_IMAGE,
+        post_image: post.post_image ,
         created_at: post.createdAt,
         updated_at: post.updatedAt,
         author: post.author ? {

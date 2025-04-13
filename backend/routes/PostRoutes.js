@@ -1,3 +1,4 @@
+//update
 const express = require('express');
 const router = express.Router();
 const postController = require('../contoller/PostController.js');
@@ -23,7 +24,9 @@ const upload = multer({
 router.get('/posts', postController.getAllPosts);
 router.get('/posts/author/:authorId', postController.getPostsByAuthorId);
 router.post('/posts', upload.single('image'),postController.createPost);
-router.put('/posts/:id', postController.updatePost);
+// router.put('/posts/:id', postController.updatePost);
+
+router.put('/posts/:id', upload.single('image'), postController.updatePost);
 router.delete('/posts/:id', postController.deletePost);
 router.get('/posts/:id', postController.getPostById);
 module.exports = router;

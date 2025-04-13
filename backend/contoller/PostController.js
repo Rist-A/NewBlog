@@ -642,7 +642,26 @@ const updatePost = async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const [updated] = await Post.update(req.body, {
+    const { title, content, category_id } = req.body;
+    const updateData = { title, content, category_id };
+
+    // Handle image upload if file exists
+    let imageUrl;
+    if (req.file) {
+      try {
+        const result = await cloudinary.uploader.upload(
+          `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+          { folder: 'blog-posts' }
+        );
+        imageUrl = result.secure_url;
+        updateData.post_image = imageUrl;
+      } catch (uploadError) {
+        console.error('Cloudinary upload failed:', uploadError.message);
+        return res.status(400).json({ error: 'Image upload failed' });
+      }
+    }
+
+    const [updated] = await Post.update(updateData, {
       where: { 
         id: req.params.id, 
         author_id: user.id // Only the author can update
@@ -669,7 +688,11 @@ const updatePost = async (req, res) => {
       res.status(404).json({ error: 'Post not found or unauthorized' });
     }
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Post update error:', error.message);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
