@@ -5,6 +5,7 @@ import * as z from "zod";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import back2 from "../Asset/back2.png";
+import { useTheme } from "../ThemeContext";
 
 const postFormSchema = z.object({
   title: z
@@ -25,6 +26,7 @@ const defaultValues = {
 
 const CreatePostForm = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const {
     register,
     handleSubmit,
@@ -48,6 +50,16 @@ const CreatePostForm = () => {
   const [typingText, setTypingText] = useState("");
   const [typingComplete, setTypingComplete] = useState(false);
   const [aiGreeting, setAiGreeting] = useState("");
+
+  // Theme-based colors
+  const bgColor = theme === 'dark' ? 'bg-[#181818]' : 'bg-gray-50';
+  const textColor = theme === 'dark' ? 'text-white' : 'text-gray-900';
+  const secondaryTextColor = theme === 'dark' ? 'text-[#7B7B7B]' : 'text-gray-600';
+  const accentColor = theme === 'dark' ? 'text-[#91CC6E]' : 'text-green-600';
+  const accentBgColor = theme === 'dark' ? 'bg-[#91CC6E33]' : 'bg-green-100';
+  const cardBgColor = theme === 'dark' ? 'bg-[#282828]' : 'bg-white';
+  const borderColor = theme === 'dark' ? 'border-gray-700' : 'border-gray-200';
+  const inputBgColor = theme === 'dark' ? 'bg-[#383838]' : 'bg-white';
 
   const title = watch("title");
   const content = watch("content");
@@ -104,6 +116,9 @@ const CreatePostForm = () => {
     setActiveAIFunction(null);
   };
 
+
+
+  
   const generateGreeting = () => {
     const greetings = [
       "Hello! Let me help you craft an amazing post.",
@@ -127,7 +142,7 @@ const CreatePostForm = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          timeout: 30000
+          timeout: 600000
         }
       );
 
@@ -295,7 +310,7 @@ const CreatePostForm = () => {
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen p-8 text-white relative">
+    <div className={`${bgColor} min-h-screen p-4 ${textColor}`}>
       {/* AI Assistant Button */}
       <button
         onClick={() => {
@@ -305,7 +320,7 @@ const CreatePostForm = () => {
             resetAISuggestion();
           }
         }}
-        className="fixed bottom-8 right-8 bg-[#91CC6E] hover:bg-[#91CC6E] text-white p-4 rounded-full shadow-lg z-10"
+        className={`fixed bottom-8 right-8 ${accentBgColor} ${textColor} p-3 rounded-full shadow-lg z-10`}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -314,10 +329,10 @@ const CreatePostForm = () => {
 
       {/* AI Assistant Panel */}
       {showAIAssistant && (
-        <div className="fixed bottom-24 right-8 w-80 bg-gray-800 rounded-lg shadow-xl p-4 z-10 border border-gray-700">
+        <div className={`fixed bottom-24 right-8 w-80 ${cardBgColor} rounded-lg shadow-lg p-4 z-10 border ${borderColor}`}>
           <div className="flex justify-between items-center mb-3">
-            <h3 className="font-semibold text-lg">AI Writing Assistant</h3>
-            <button onClick={() => setShowAIAssistant(false)} className="text-gray-400 hover:text-white">
+            <h3 className={`font-semibold text-lg ${textColor}`}>AI Writing Assistant</h3>
+            <button onClick={() => setShowAIAssistant(false)} className={`${secondaryTextColor} hover:${textColor}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
@@ -326,8 +341,8 @@ const CreatePostForm = () => {
           
           <div className="space-y-4">
             {aiGreeting && !aiSuggestion && (
-              <div className="bg-gray-700/50 p-3 rounded-lg">
-                <p className="text-sm">{aiGreeting}</p>
+              <div className={`${inputBgColor} p-3 rounded-lg text-sm ${textColor}`}>
+                <p>{aiGreeting}</p>
               </div>
             )}
 
@@ -335,7 +350,7 @@ const CreatePostForm = () => {
               <button
                 onClick={generateTitleFromContent}
                 disabled={!content || isAiThinking}
-                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm ${!content || isAiThinking ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#91CC6E] hover:bg-[#91CC6E]'}`}
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm ${!content || isAiThinking ? `${inputBgColor} cursor-not-allowed` : `${accentBgColor} hover:opacity-80`}`}
               >
                 Suggest Title
               </button>
@@ -343,7 +358,7 @@ const CreatePostForm = () => {
               <button
                 onClick={generateContentFromTitle}
                 disabled={!title || isAiThinking}
-                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm ${!title || isAiThinking ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#91CC6E] hover:bg-[#91CC6E]'}`}
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm ${!title || isAiThinking ? `${inputBgColor} cursor-not-allowed` : `${accentBgColor} hover:opacity-80`}`}
               >
                 Generate Content
               </button>
@@ -353,7 +368,7 @@ const CreatePostForm = () => {
               <button
                 onClick={suggestCategory}
                 disabled={(!title && !content) || isAiThinking}
-                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm ${(!title && !content) || isAiThinking ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#91CC6E] hover:bg-#91CC6E'}`}
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm ${(!title && !content) || isAiThinking ? `${inputBgColor} cursor-not-allowed` : `${accentBgColor} hover:opacity-80`}`}
               >
                 Suggest Category
               </button>
@@ -361,33 +376,33 @@ const CreatePostForm = () => {
               <button
                 onClick={improveContent}
                 disabled={!content || isAiThinking}
-                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm ${!content || isAiThinking ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#91CC6E] hover:bg-[#91CC6E]'}`}
+                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm ${!content || isAiThinking ? `${inputBgColor} cursor-not-allowed` : `${accentBgColor} hover:opacity-80`}`}
               >
                 Improve Content
               </button>
             </div>
 
             {isAiThinking && (
-              <div className="flex items-center justify-center gap-2 p-3 bg-gray-700/50 rounded-lg">
-                <div className="animate-spin h-5 w-5 border-2 border-[#91CC6E] border-t-transparent rounded-full"></div>
+              <div className={`flex items-center justify-center gap-2 p-3 ${inputBgColor} rounded-lg`}>
+                <div className={`animate-spin h-5 w-5 border-2 ${accentColor} border-t-transparent rounded-full`}></div>
                 <span>Thinking...</span>
               </div>
             )}
 
             {aiSuggestion && (
-              <div className="bg-gray-700/50 p-3 rounded-lg">
+              <div className={`${inputBgColor} p-3 rounded-lg`}>
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium">AI Suggestions:</h4>
+                  <h4 className={`font-medium ${textColor}`}>AI Suggestions:</h4>
                   {activeAIFunction && (
                     <button 
                       onClick={() => applyAISuggestion(activeAIFunction)}
-                      className="text-xs bg-[#91CC6E] hover:bg-[#91CC6E] px-2 py-1 rounded"
+                      className={`text-xs ${accentBgColor} px-2 py-1 rounded hover:opacity-80`}
                     >
                       Apply
                     </button>
                   )}
                 </div>
-                <div className="text-sm whitespace-pre-line">
+                <div className={`text-sm whitespace-pre-line ${textColor}`}>
                   {typingText}
                   {!typingComplete && <span className="animate-blink">|</span>}
                 </div>
@@ -398,28 +413,23 @@ const CreatePostForm = () => {
       )}
 
       {/* Main Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="container mx-auto">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Left side */}
-          <div className="w-full md:w-1/3">
-            <h2 className="text-2xl font-bold mb-4">Create New Post</h2>
-            <p className="text-gray-300 mb-6">
-              Share your thoughts and ideas with the world.
-            </p>
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl mx-auto">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-300 hover:text-white"
+              className={`flex items-center gap-2 ${secondaryTextColor} hover:${textColor}`}
             >
               <img src={back2} alt="Back" className="h-5 w-5" />
               Back
             </button>
+            <h2 className={`text-2xl font-bold ${textColor}`}>Create New Post</h2>
           </div>
 
-          {/* Right side - form */}
-          <div className="w-full md:w-2/3 bg-gray-800 p-6 rounded-lg">
+          <div className={`${cardBgColor} p-6 rounded-lg shadow-md border ${borderColor}`}>
             {serverError && (
-              <div className="mb-4 p-3 bg-red-500/20 text-red-300 rounded-md">
+              <div className={`mb-4 p-3 ${theme === 'dark' ? 'bg-red-900' : 'bg-red-100'} ${theme === 'dark' ? 'text-red-200' : 'text-red-700'} rounded-md text-sm`}>
                 {serverError}
               </div>
             )}
@@ -427,61 +437,61 @@ const CreatePostForm = () => {
             <div className="space-y-6">
               {/* Title */}
               <div>
-                <label htmlFor="title" className="block text-sm font-medium mb-1">
+                <label htmlFor="title" className={`block text-sm font-medium mb-1 ${textColor}`}>
                   Title
                 </label>
                 <input
                   type="text"
                   id="title"
-                  className="w-full bg-gray-700 rounded-md p-2 text-white"
+                  className={`w-full ${inputBgColor} rounded-md p-2 ${textColor} border ${borderColor}`}
                   {...register("title")}
                 />
                 {errors.title && (
-                  <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+                  <p className={`${accentColor} text-sm mt-1`}>{errors.title.message}</p>
                 )}
               </div>
 
               {/* Content */}
               <div>
-                <label htmlFor="content" className="block text-sm font-medium mb-1">
+                <label htmlFor="content" className={`block text-sm font-medium mb-1 ${textColor}`}>
                   Content
                 </label>
                 <textarea
                   id="content"
                   rows={8}
-                  className="w-full bg-gray-700 rounded-md p-2 text-white"
+                  className={`w-full ${inputBgColor} rounded-md p-2 ${textColor} border ${borderColor}`}
                   {...register("content")}
                 />
                 {errors.content && (
-                  <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
+                  <p className={`${accentColor} text-sm mt-1`}>{errors.content.message}</p>
                 )}
               </div>
 
               {/* Image */}
               <div>
-                <label htmlFor="image" className="block text-sm font-medium mb-1">
+                <label htmlFor="image" className={`block text-sm font-medium mb-1 ${textColor}`}>
                   Image (Optional)
                 </label>
                 <input
                   type="file"
                   id="image"
                   accept="image/*"
-                  className="w-full text-sm text-gray-400"
+                  className={`w-full text-sm ${secondaryTextColor}`}
                   onChange={(e) => setValue("image", e.target.files?.[0] || undefined)}
                 />
               </div>
 
               {/* Category */}
               <div>
-                <label htmlFor="category_id" className="block text-sm font-medium mb-1">
+                <label htmlFor="category_id" className={`block text-sm font-medium mb-1 ${textColor}`}>
                   Category *
                 </label>
                 {isLoading ? (
-                  <div className="animate-pulse bg-gray-700 h-10 rounded-md"></div>
+                  <div className={`animate-pulse ${inputBgColor} h-10 rounded-md`}></div>
                 ) : (
                   <select
                     id="category_id"
-                    className="w-full bg-gray-700 rounded-md p-2 text-white"
+                    className={`w-full ${inputBgColor} rounded-md p-2 ${textColor} border ${borderColor}`}
                     {...register("category_id")}
                   >
                     <option value="">Select a category</option>
@@ -493,7 +503,7 @@ const CreatePostForm = () => {
                   </select>
                 )}
                 {errors.category_id && (
-                  <p className="text-red-500 text-sm mt-1">{errors.category_id.message}</p>
+                  <p className={`${accentColor} text-sm mt-1`}>{errors.category_id.message}</p>
                 )}
               </div>
 
@@ -501,13 +511,13 @@ const CreatePostForm = () => {
                 <button
                   type="button"
                   onClick={() => reset()}
-                  className="px-4 py-2 bg-gray-700 rounded-md hover:bg-gray-600"
+                  className={`px-4 py-2 ${inputBgColor} rounded-md hover:opacity-80 ${textColor}`}
                 >
                   Reset
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#91CC6E] rounded-md hover:bg-[#91CC6E] disabled:opacity-50"
+                  className={`px-4 py-2 ${accentBgColor} rounded-md hover:opacity-80 ${accentColor} disabled:opacity-50`}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Creating..." : "Create Post"}

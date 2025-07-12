@@ -4,8 +4,7 @@ const commentController = require('../contoller/Commentcontroller');
 const authMiddleware = require('../middleware/authMiddleware.js')
 const { body } = require('express-validator');
 // Protected routes
-// router.get('/posts/:postId/comments', commentController.getCommentsByPostId);
-// router.get('/comments/:id', commentController.getCommentById);
+
 router.post('/posts/:postId/comments', commentController.createComment);
 router.put('/comments/:id', commentController.updateComment);
 router.delete('/comments/:id', commentController.deleteComment);

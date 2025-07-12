@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ArrowRight, ArrowLeft, Menu, X } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import CommentDetail from "./CommentDetail";
@@ -10,50 +10,51 @@ import { motion, AnimatePresence } from "framer-motion";
 const BlogPage = () => {
   const { theme } = useTheme();
   const [posts, setPosts] = useState([]);
-  const [allPosts, setAllPosts] = useState([]); // Store all posts for filtering
+  const [allPosts, setAllPosts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showCommentDetail, setShowCommentDetail] = useState(false);
-  const [detailPostId, setDetailPostId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [loadingStates, setLoadingStates] = useState({});
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const postsPerPage = 4;
   const navigate = useNavigate();
   const location = useLocation();
+  const topRef = useRef(null);
 
-  // Theme-based colors
-  const bgColor = theme === 'dark' ? 'bg-[#181818]' : 'bg-gray-50';
-  const textColor = theme === 'dark' ? 'text-white' : 'text-gray-900';
-  const secondaryTextColor = theme === 'dark' ? 'text-[#7B7B7B]' : 'text-gray-600';
-  const accentColor = theme === 'dark' ? 'text-[#91CC6E]' : 'text-green-600';
-  const accentBgColor = theme === 'dark' ? 'bg-[#91CC6E33]' : 'bg-green-100';
-  const cardBgColor = theme === 'dark' ? 'bg-[#282828]' : 'bg-white';
-  const borderColor = theme === 'dark' ? 'border-gray-700' : 'border-gray-200';
-  const dropdownBgColor = theme === 'dark' ? 'bg-[#282828]' : 'bg-white';
-  const dropdownHoverColor = theme === 'dark' ? 'hover:bg-[#383838]' : 'hover:bg-gray-100';
+  // NAEL PRODUCTION THEME COLORS
+  const bgColor = theme === 'dark' ? 'bg-[#061012]' : 'bg-white';
+  const textColor = theme === 'dark' ? 'text-white' : 'text-[#061012]';
+  const secondaryTextColor = theme === 'dark' ? 'text-[#A3B3BC]' : 'text-[#4A5A63]';
+  const accentColor = theme === 'dark' ? 'text-[#FFD700]' : 'text-[#C9A227]';
+  const accentBgColor = theme === 'dark' ? 'bg-[#FFD70022]' : 'bg-[#FFD70011]';
+  const cardBgColor = theme === 'dark' ? 'bg-[#0E1A1F]' : 'bg-[#F8F9FA]';
+  const borderColor = theme === 'dark' ? 'border-[#1E2D33]' : 'border-[#E0E6EA]';
+  const dropdownBgColor = theme === 'dark' ? 'bg-[#0E1A1F]' : 'bg-white';
+  const dropdownHoverColor = theme === 'dark' ? 'hover:bg-[#1E2D33]' : 'hover:bg-[#F8F9FA]';
+  const goldHover = 'hover:text-[#FFD700] transition-colors duration-300';
 
   // Hero section content
   const heroContent = [
     {
-      title: "What's New?",
-      subtitle: "Share Your Best Moment Here",
-      buttonText: "Start Now",
-      backgroundImage: "https://assets.vogue.com/photos/5f651e490f204e69b53eacbd/master/pass/VO080119_DESIGNERS_46.jpg",
+      title: "Nael Production Studio",
+      subtitle: "Cinematic Excellence in Every Frame",
+      buttonText: "Explore Our Work",
+      backgroundImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     },
     {
-      title: "Latest Trends",
-      subtitle: "Discover the newest fashion trends",
-      buttonText: "Explore Now",
-      backgroundImage: "https://media.bleacherreport.com/image/upload/v1719242794/teiolpjmhprr7izmwo3f.jpg",
+      title: "Film Production Services",
+      subtitle: "Bringing Your Vision to Life",
+      buttonText: "View Portfolio",
+      backgroundImage: "https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     },
     {
-      title: "Men's Fashion",
-      subtitle: "See the latest in men's style",
-      buttonText: "View Collection",
-      backgroundImage: "https://media.glamour.com/photos/66f5c2777e09bc43bcee2067/master/w_2560%2Cc_limit/men%25E2%2580%2599s%2520fashion%2520trends.jpg",
+      title: "Creative Storytelling",
+      subtitle: "Where Imagination Meets Reality",
+      buttonText: "Start a Project",
+      backgroundImage: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     }
   ];
 
@@ -64,25 +65,54 @@ const BlogPage = () => {
     slideDirection: 'up'
   });
 
-  // Preload hero images
+  // Auto-rotate hero images
   useEffect(() => {
-    heroContent.forEach(content => {
-      const img = new Image();
-      img.src = content.backgroundImage;
-    });
-  }, []);
+    const interval = setInterval(() => {
+      // Phase 1: Start fading out text (500ms)
+      setTextAnimation({
+        fadeOut: true,
+        slideDirection: 'up'
+      });
+      
+      // Phase 2: Change background image exactly when text is fully faded out
+      setTimeout(() => {
+        setCurrentBackgroundIndex(nextContentIndex);
+        setNextContentIndex((nextContentIndex + 1) % heroContent.length);
+        
+        // Phase 3: Start fading in new text immediately
+        setTextAnimation({
+          fadeOut: false,
+          slideDirection: 'down'
+        });
+      }, 500); // Matches the text fade-out duration
+    }, 6000); // Total cycle time (6 seconds)
 
-  // Fetch all posts and categories
+    return () => clearInterval(interval);
+  }, [nextContentIndex]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    if (topRef.current) {
+      topRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [currentPage]);
+
+  // Fetch posts and categories
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const token = sessionStorage.getItem("token");
         
         // Fetch posts
         const postsResponse = await fetch("http://localhost:5000/posts", {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
-        if (!postsResponse.ok) throw new Error("Failed to fetch posts");
+        
+        if (!postsResponse.ok) {
+          throw new Error("Failed to fetch posts");
+        }
+        
         let postsData = await postsResponse.json();
 
         // Transform the API response
@@ -111,13 +141,20 @@ const BlogPage = () => {
 
         // Fetch categories
         const categoriesResponse = await fetch("http://localhost:5000/categories");
-        if (!categoriesResponse.ok) throw new Error("Failed to fetch categories");
+        if (!categoriesResponse.ok) {
+          throw new Error("Failed to fetch categories");
+        }
         const categoriesData = await categoriesResponse.json();
         setCategories(categoriesData);
+        
       } catch (error) {
         console.error("Error fetching data:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
@@ -132,33 +169,23 @@ const BlogPage = () => {
     setCurrentPage(1); // Reset to first page when category changes
   }, [selectedCategory, allPosts]);
 
-  // Background image and text transition effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Phase 1: Start fading out text (500ms)
-      setTextAnimation({
-        fadeOut: true,
-        slideDirection: 'up'
-      });
-      
-      // Phase 2: Change background image exactly when text is fully faded out
-      setTimeout(() => {
-        setCurrentBackgroundIndex(nextContentIndex);
-        setNextContentIndex((nextContentIndex + 1) % heroContent.length);
-        
-        // Phase 3: Start fading in new text immediately
-        setTextAnimation({
-          fadeOut: false,
-          slideDirection: 'down'
-        });
-      }, 500); // Matches the text fade-out duration
-    }, 6000); // Total cycle time (6 seconds)
+  // Recent posts for the "Recent Productions" section
+  const recentPosts = allPosts.slice(0, 3);
+  
+  // Pagination logic
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(posts.length / postsPerPage);
 
-    return () => clearInterval(interval);
-  }, [nextContentIndex]);
+  // Handle card click - navigate to CommentDetail
+  const handleCardClick = (postId) => {
+    navigate(`/posts/${postId}/comments`);
+  };
 
   // Like handler
-  const handleLike = async (postId) => {
+  const handleLike = async (postId, e) => {
+    e.stopPropagation(); // Prevent card click when liking
     const token = sessionStorage.getItem("token");
     if (!token) {
       navigate("/login", { state: { from: location.pathname } });
@@ -190,6 +217,7 @@ const BlogPage = () => {
           'Authorization': `Bearer ${token}`
         }
       });
+      
       if (!response.ok) {
         throw new Error('Failed to update like status');
       }
@@ -229,24 +257,35 @@ const BlogPage = () => {
     }
   };
 
-  // Recent posts for the "Recent blog posts" section (always shows 3 most recent from all categories)
-  const recentPosts = allPosts.slice(0, 3);
-  
-  // Pagination logic
-  const indexOfLastPost = currentPage * postsPerPage;
-  const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
-  const totalPages = Math.ceil(posts.length / postsPerPage);
+  if (loading) {
+    return (
+      <div className={`min-h-screen ${bgColor} flex items-center justify-center`}>
+        <div className="text-center">
+          <div className={`${accentColor} text-2xl font-semibold`}>Loading Productions...</div>
+          <div className="mt-4">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // Handle comment click
-  const handleCommentClick = (postId) => {
-    const token = sessionStorage.getItem("token");
-    if (!token) {
-      navigate("/login", { state: { from: location.pathname } });
-      return;
-    }
-    navigate(`/posts/${postId}/comments`);
-  };
+  if (error) {
+    return (
+      <div className={`min-h-screen ${bgColor} flex items-center justify-center`}>
+        <div className="text-center">
+          <div className={`text-red-500 text-2xl font-semibold`}>Error Loading Data</div>
+          <div className={`${textColor} mt-2`}>{error}</div>
+          <button 
+            onClick={() => window.location.reload()}
+            className={`mt-4 px-4 py-2 ${accentColor} border border-[#FFD700] rounded-lg hover:bg-[#FFD70022] transition-colors`}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -256,57 +295,59 @@ const BlogPage = () => {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className={`min-h-screen ${bgColor} ${textColor} w-full`}>
-          {/* Mobile Menu Button (only visible on small screens) */}
+        <div className={`min-h-screen ${bgColor} ${textColor} w-full`} ref={topRef}>
+          {/* Mobile Menu Button */}
           <div className="md:hidden fixed top-4 right-4 z-50">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`p-2 rounded-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'}`}
+              className={`p-2 rounded-full ${theme === 'dark' ? 'bg-[#0E1A1F]' : 'bg-[#F8F9FA]'} ${goldHover}`}
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
 
-          {/* Mobile Menu (slides in from right) */}
+          {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div 
-              className={`fixed inset-0 z-40 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'} p-6 transition-transform duration-300`}
+              className={`fixed inset-0 z-40 ${theme === 'dark' ? 'bg-[#061012]' : 'bg-white'} p-6 transition-transform duration-300`}
               onClick={() => setMobileMenuOpen(false)}
             >
               <div className="flex flex-col h-full">
                 <div className="flex justify-end mb-8">
-                  <button onClick={() => setMobileMenuOpen(false)}>
+                  <button onClick={() => setMobileMenuOpen(false)} className={goldHover}>
                     <X size={24} />
                   </button>
                 </div>
                 <nav className="flex flex-col gap-6 text-xl">
-                  <Link to="/" className="hover:text-[#91CC6E]">Home</Link>
-                  <Link to="/create" className="hover:text-[#91CC6E]">Create Post</Link>
-                  <Link to="/profile" className="hover:text-[#91CC6E]">Profile</Link>
-                  <Link to="/login" className="hover:text-[#91CC6E]">Login</Link>
+                  <Link to="/" className={`${goldHover}`}>Home</Link>
+                  <Link to="/create" className={`${goldHover}`}>Create Post</Link>
+                  <Link to="/profile" className={`${goldHover}`}>Profile</Link>
+                  <Link to="/login" className={`${goldHover}`}>Login</Link>
                 </nav>
               </div>
             </div>
           )}
           
-          {/* Hero Section with Enhanced Transitions */}
+          {/* Hero Section with Sliding Animation */}
           <div className="w-full h-screen relative overflow-hidden">
-            {/* Background Image with Crossfade */}
             {heroContent.map((content, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="absolute inset-0 object-top w-full h-full transition-opacity duration-1000"
-                style={{
-                  backgroundImage: `url(${content.backgroundImage})`,
-                  backgroundSize: "contain",
-                  backgroundPosition: "center",
+                className="absolute inset-0 w-full h-full"
+                initial={{ opacity: 0 }}
+                animate={{ 
                   opacity: currentBackgroundIndex === index ? 1 : 0,
+                  transition: { duration: 1 }
+                }}
+                style={{
+                  backgroundImage: `linear-gradient(to bottom, rgba(6, 16, 18, 0.7), rgba(6, 16, 18, 0.7)), url(${content.backgroundImage})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
                   zIndex: currentBackgroundIndex === index ? 1 : 0,
                 }}
               />
             ))}
             
-            {/* Content */}
             <div 
               className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full px-4 z-10 ${
                 textAnimation.fadeOut 
@@ -317,108 +358,146 @@ const BlogPage = () => {
                 transition: "opacity 500ms ease-in-out, transform 500ms ease-in-out"
               }}
             >
-              <div className="habesha-blog font-semibold text-[#91CC6E] text-lg mb-2">
-                Our blog
+              <div className={`font-semibold ${accentColor} text-lg mb-2 tracking-widest`}>
+                NAEL PRODUCTION
               </div>
-              <div className="text-5xl font-semibold mt-4 text-white">
+              <h1 className="text-5xl font-bold mt-4 text-white">
                 {heroContent[currentBackgroundIndex].title}
-              </div>
-              <div className="text-[20px] mt-4 text-[#c0c0c0]">
+              </h1>
+              <div className="text-xl mt-4 text-[#A3B3BC] max-w-2xl mx-auto">
                 {heroContent[currentBackgroundIndex].subtitle}
               </div>
               <div className="flex gap-x-4 mt-8 justify-center">
-                <button
-                  className={`w-[118px] h-12 bg-[#91CC6E] font-semibold flex items-center justify-center rounded-lg ${
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`w-48 h-12 ${accentColor} bg-transparent border-2 border-[#FFD700] font-semibold flex items-center justify-center rounded-lg ${
                     textAnimation.fadeOut ? 'scale-90' : 'scale-100'
-                  }`}
+                  } ${goldHover}`}
                   style={{ transition: "transform 300ms ease-in-out" }}
                   onClick={() => navigate("/login")}
                 >
                   {heroContent[currentBackgroundIndex].buttonText}
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>
 
-          {/* Recent Blog Posts Section */}
-          <section className="py-12 px-4 md:px-28">
-            <h2 className={`font-semibold text-2xl md:text-3xl mb-8 ${textColor}`}>
-              Recent blog posts
+          {/* Recent Productions Section with Modern Hover Effects */}
+          <section className="py-16 px-4 md:px-28">
+            <h2 className={`font-bold text-3xl md:text-4xl mb-8 ${textColor} relative inline-block`}>
+              Recent Productions
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FFD700]"></span>
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {recentPosts.map((post) => (
-                <article 
-                  key={post.id} 
-                  className={`rounded-lg overflow-hidden shadow-lg ${cardBgColor} transition-transform hover:scale-[1.02]`}
-                >
-                  <div className="w-full h-48 md:h-64 relative">
-                    <img
-                      src={post.image_url}
-                      alt="Blog Post"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = "https://res.cloudinary.com/docuoohjc/image/upload/v1743161246/noimage_uhgqfc.jpg";
-                      }}
-                    />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className={`${accentColor} text-sm font-semibold`}>
-                        {post.user_name} • {new Date(post.created_at).toLocaleDateString()}
+            {recentPosts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {recentPosts.map((post) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    whileHover={{ y: -10 }}
+                    className="relative group cursor-pointer"
+                    onClick={() => handleCardClick(post.id)}
+                  >
+                    <div className="absolute inset-0 bg-[#FFD700] opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl"></div>
+                    <div className="absolute inset-0 border border-[#FFD700] opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300 pointer-events-none"></div>
+                    
+                    <motion.article 
+                      whileHover={{ scale: 1.02 }}
+                      className={`rounded-xl overflow-hidden shadow-xl ${cardBgColor} transition-all duration-300 relative z-10 h-full`}
+                    >
+                      <div className="w-full h-48 md:h-64 relative overflow-hidden">
+                        <img
+                          src={post.image_url}
+                          alt="Production"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => {
+                            e.target.src = "https://res.cloudinary.com/docuoohjc/image/upload/v1743161246/noimage_uhgqfc.jpg";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#061012] via-transparent to-transparent opacity-80"></div>
+                        <div className="absolute bottom-4 left-4">
+                          <span className={`${accentColor} text-sm font-semibold`}>
+                            {post.category}
+                          </span>
+                        </div>
                       </div>
-                      <img
-                        src={post.user_image_url}
-                        alt="User Profile"
-                        className="w-8 h-8 md:w-10 md:h-10 rounded-full"
-                        onError={(e) => {
-                          e.target.src = "default-user-image-url.jpg";
-                        }}
-                      />
-                    </div>
-                    <h3 className={`text-xl md:text-2xl font-semibold mt-2 ${textColor}`}>
-                      {post.title}
-                    </h3>
-                    <p className={`${secondaryTextColor} mt-2 line-clamp-3`}>
-                      {post.content}
-                    </p>
-                    <div className="flex gap-x-2 mt-4">
-                      <button
-                        onClick={() => handleLike(post.id)}
-                        disabled={loadingStates[post.id]}
-                        className={`${accentColor} ${accentBgColor} text-sm font-medium flex justify-center items-center px-2.5 py-0.5 rounded-full h-6 ${
-                          post.isLiked ? "opacity-80" : ""
-                        } ${loadingStates[post.id] ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                      >
-                        {post.isLiked ? '❤️' : '♡'} {post.likes}
-                        {loadingStates[post.id] && <span className="ml-1">...</span>}
-                      </button>
-                      <button
-                        onClick={() => handleCommentClick(post.id)}
-                        className={`${accentColor} ${accentBgColor} text-sm font-medium flex justify-center items-center px-2.5 py-0.5 rounded-full h-6 cursor-pointer`}
-                      >
-                        <img src={comment} alt="Comment" className="w-3 h-3" />
-                        <span className="ml-1">{post.comments_count}</span>
-                      </button>
-                      <SaveButton postId={post.id} />
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className={`${secondaryTextColor} text-sm`}>
+                            {new Date(post.created_at).toLocaleDateString()}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <img
+                              src={post.user_image_url}
+                              alt="Director"
+                              className="w-8 h-8 rounded-full border border-[#FFD700]"
+                            />
+                            <span className={`text-sm ${textColor}`}>{post.user_name}</span>
+                          </div>
+                        </div>
+                        <h3 className={`text-xl font-bold mb-2 ${textColor} group-hover:${accentColor} transition-colors`}>
+                          {post.title}
+                        </h3>
+                        <p className={`${secondaryTextColor} mb-4 line-clamp-3`}>
+                          {post.content}
+                        </p>
+                        <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={(e) => handleLike(post.id, e)}
+                              disabled={loadingStates[post.id]}
+                              className={`px-3 py-1 rounded-full text-xs font-medium flex items-center ${
+                                post.isLiked 
+                                  ? `${accentColor} bg-[#FFD70033]`
+                                  : `${secondaryTextColor} ${theme === 'dark' ? 'bg-[#1E2D33]' : 'bg-[#E0E6EA]'} hover:bg-[#FFD70033]`
+                              } ${loadingStates[post.id] ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              {post.isLiked ? '❤️' : '♡'} {post.likes}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCardClick(post.id);
+                              }}
+                              className={`px-3 py-1 rounded-full text-xs font-medium flex items-center ${
+                                theme === 'dark' ? 'bg-[#1E2D33]' : 'bg-[#E0E6EA]'
+                              } hover:bg-[#FFD70033] ${secondaryTextColor} hover:text-[#FFD700]`}
+                            >
+                              💬 {post.comments_count}
+                            </button>
+                          </div>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <SaveButton postId={post.id} />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.article>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className={`text-center py-12 ${secondaryTextColor}`}>
+                No recent productions found.
+              </div>
+            )}
           </section>
 
-          {/* All Blog Posts Section */}
-          <section className="py-12 px-4 md:px-28">
+          {/* All Productions Section with Modern Hover Effects */}
+          <section className="py-16 px-4 md:px-28">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-              <h2 className={`font-semibold text-2xl md:text-3xl ${textColor}`}>
-                All Blog Posts
+              <h2 className={`font-bold text-3xl md:text-4xl ${textColor} relative inline-block`}>
+                All Productions
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FFD700]"></span>
               </h2>
               
-              {/* Modern Category Picker */}
+              {/* Category Picker */}
               <div className="relative mt-4 md:mt-0">
                 <button
                   onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                  className={`flex items-center justify-between w-full md:w-48 px-4 py-2 rounded-lg ${dropdownBgColor} border ${borderColor} shadow-sm ${textColor}`}
+                  className={`flex items-center justify-between w-full md:w-48 px-4 py-3 rounded-lg ${dropdownBgColor} border ${borderColor} shadow-sm ${textColor} hover:border-[#FFD700] transition-colors`}
                 >
                   <span>{selectedCategory}</span>
                   <svg
@@ -435,8 +514,11 @@ const BlogPage = () => {
                 </button>
                 
                 {isCategoryDropdownOpen && (
-                  <div 
-                    className={`absolute z-10 w-full md:w-48 mt-1 rounded-lg shadow-lg ${dropdownBgColor} border ${borderColor} max-h-60 overflow-auto`}
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className={`absolute z-10 w-full md:w-48 mt-1 rounded-lg shadow-xl ${dropdownBgColor} border ${borderColor} max-h-60 overflow-auto`}
                     onMouseLeave={() => setIsCategoryDropdownOpen(false)}
                   >
                     <button
@@ -444,9 +526,11 @@ const BlogPage = () => {
                         setSelectedCategory("All");
                         setIsCategoryDropdownOpen(false);
                       }}
-                      className={`block w-full text-left px-4 py-2 ${selectedCategory === "All" ? accentBgColor : ''} ${dropdownHoverColor} ${textColor}`}
+                      className={`block w-full text-left px-4 py-3 ${
+                        selectedCategory === "All" ? `${accentBgColor} ${accentColor}` : `${textColor} ${dropdownHoverColor}`
+                      } transition-colors`}
                     >
-                      All
+                      All Categories
                     </button>
                     {categories.map((category) => (
                       <button
@@ -455,98 +539,129 @@ const BlogPage = () => {
                           setSelectedCategory(category.category_name);
                           setIsCategoryDropdownOpen(false);
                         }}
-                        className={`block w-full text-left px-4 py-2 ${selectedCategory === category.category_name ? accentBgColor : ''} ${dropdownHoverColor} ${textColor}`}
+                        className={`block w-full text-left px-4 py-3 ${
+                          selectedCategory === category.category_name ? `${accentBgColor} ${accentColor}` : `${textColor} ${dropdownHoverColor}`
+                        } transition-colors`}
                       >
                         {category.category_name}
                       </button>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
               </div>
             </div>
             
-            {posts.length === 0 ? (
+            {currentPosts.length === 0 ? (
               <div className={`text-center py-12 ${secondaryTextColor}`}>
-                No posts found in this category.
+                No productions found in this category.
               </div>
             ) : (
-              <div className="flex flex-col gap-12">
+              <div className="flex flex-col gap-8">
                 {currentPosts.map((post) => (
-                  <article 
-                    key={post.id} 
-                    className={`flex flex-col md:flex-row gap-6 p-4 rounded-lg ${cardBgColor} shadow-md`}
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    whileHover={{ y: -10 }}
+                    className="relative group cursor-pointer"
+                    onClick={() => handleCardClick(post.id)}
                   >
-                    <div className="md:w-1/4 flex flex-row md:flex-col items-start gap-4">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={post.user_image_url}
-                          alt="User Profile"
-                          className="w-10 h-10 rounded-full"
-                          onError={(e) => {
-                            e.target.src = "default-user-image-url.jpg";
-                          }}
-                        />
-                        <div className="md:hidden">
-                          <div className={`${accentColor} text-sm font-semibold`}>
-                            {post.user_name}
-                          </div>
-                          <div className={`${secondaryTextColor} text-xs`}>
-                            {new Date(post.created_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="hidden md:block">
-                        <div className={`${accentColor} text-sm font-semibold`}>
-                          {post.user_name}
-                        </div>
-                        <div className={`${secondaryTextColor} text-sm`}>
-                          {new Date(post.created_at).toLocaleDateString()}
-                        </div>
-                        <div className={`${accentColor} text-xs mt-1`}>
-                          {post.category}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="md:w-3/4">
-                      <div className="w-full h-64 md:h-96 rounded-lg overflow-hidden">
+                    <div className="absolute inset-0 bg-[#FFD700] opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl"></div>
+                    <div className="absolute inset-0 border border-[#FFD700] opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300 pointer-events-none"></div>
+                    
+                    <motion.article 
+                      whileHover={{ scale: 1.02 }}
+                      className={`flex flex-col md:flex-row gap-6 p-6 rounded-xl ${cardBgColor} transition-all duration-300 relative z-10`}
+                    >
+                      <div className="md:w-1/3 lg:w-1/4 h-64 md:h-auto relative overflow-hidden rounded-lg">
                         <img
                           src={post.image_url}
-                          alt="Blog Post"
-                          className="w-full h-full object-cover"
+                          alt="Production"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                           onError={(e) => {
                             e.target.src = "https://res.cloudinary.com/docuoohjc/image/upload/v1743161246/noimage_uhgqfc.jpg";
                           }}
                         />
+                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#061012] to-transparent">
+                          <span className={`${accentColor} text-sm font-semibold`}>
+                            {post.category}
+                          </span>
+                        </div>
                       </div>
-                      <h3 className={`text-xl md:text-2xl font-semibold mt-4 ${textColor}`}>
-                        {post.title}
-                      </h3>
-                      <p className={`${secondaryTextColor} mt-2`}>
-                        {post.content}
-                      </p>
-                      <div className="flex gap-x-2 mt-4">
-                        <button
-                          onClick={() => handleLike(post.id)}
-                          disabled={loadingStates[post.id]}
-                          className={`${accentColor} ${accentBgColor} text-sm font-medium flex justify-center items-center px-2.5 py-0.5 rounded-full h-6 ${
-                            post.isLiked ? "opacity-80" : ""
-                          } ${loadingStates[post.id] ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                        >
-                          {post.isLiked ? '❤️' : '♡'} {post.likes}
-                          {loadingStates[post.id] && <span className="ml-1">...</span>}
-                        </button>
-                        <button
-                          onClick={() => handleCommentClick(post.id)}
-                          className={`${accentColor} ${accentBgColor} text-sm font-medium flex justify-center items-center px-2.5 py-0.5 rounded-full h-6 cursor-pointer`}
-                        >
-                          <img src={comment} alt="Comment" className="w-3 h-3" />
-                          <span className="ml-1">{post.comments_count}</span>
-                        </button>
-                        <SaveButton postId={post.id} />
+
+                      <div className="md:w-2/3 lg:w-3/4 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className={`${secondaryTextColor} text-sm`}>
+                              {new Date(post.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <img
+                                src={post.user_image_url}
+                                alt="Director"
+                                className="w-8 h-8 rounded-full border border-[#FFD700]"
+                              />
+                              <span className={`text-sm ${textColor}`}>{post.user_name}</span>
+                            </div>
+                          </div>
+                          
+                          <h3 className={`text-2xl font-bold mb-3 ${textColor} group-hover:${accentColor} transition-colors`}>
+                            {post.title}
+                          </h3>
+                          
+                          <p className={`${secondaryTextColor} mb-6`}>
+                            {post.content}
+                          </p>
+                        </div>
+                        
+                        <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex space-x-3">
+                            <button
+                              onClick={(e) => handleLike(post.id, e)}
+                              disabled={loadingStates[post.id]}
+                              className={`px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2 ${
+                                post.isLiked 
+                                  ? `${accentColor} bg-[#FFD70033]`
+                                  : `${secondaryTextColor} ${theme === 'dark' ? 'bg-[#1E2D33]' : 'bg-[#E0E6EA]'} hover:bg-[#FFD70033]`
+                              } ${loadingStates[post.id] ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              <span>{post.isLiked ? '❤️' : '♡'}</span>
+                              <span>{post.likes}</span>
+                            </button>
+                            
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCardClick(post.id);
+                              }}
+                              className={`px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2 ${
+                                theme === 'dark' ? 'bg-[#1E2D33]' : 'bg-[#E0E6EA]'
+                              } hover:bg-[#FFD70033] ${secondaryTextColor} hover:text-[#FFD700]`}
+                            >
+                              <span>💬</span>
+                              <span>{post.comments_count}</span>
+                            </button>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3">
+                            <SaveButton postId={post.id} />
+                            <Link 
+                              to={`/posts/${post.id}/comments`}
+                              className={`px-4 py-2 rounded-full text-sm font-medium ${theme === 'dark' ? 'bg-[#1E2D33]' : 'bg-[#E0E6EA]'} ${accentColor} hover:bg-[#FFD70033] transition-colors`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              View Details
+                            </Link>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </article>
+                    </motion.article>
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -554,38 +669,49 @@ const BlogPage = () => {
 
           {/* Pagination Section */}
           {posts.length > 0 && (
-            <div className={`py-8 px-4 md:px-28 border-t ${borderColor}`}>
+            <div className={`py-12 px-4 md:px-28 border-t ${borderColor}`}>
               <div className="flex items-center justify-between">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  onClick={() => {
+                    setCurrentPage(prev => Math.max(prev - 1, 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   disabled={currentPage === 1}
                   className={`flex gap-x-2 items-center ${textColor} ${
-                    currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:text-[#91CC6E]"
+                    currentPage === 1 ? "opacity-50 cursor-not-allowed" : `${goldHover}`
                   }`}
                 >
                   <ArrowLeft className="w-5 h-5" />
                   <span className="text-sm font-medium">Previous</span>
                 </button>
+                
                 <div className="flex">
                   {Array.from({ length: totalPages }, (_, index) => (
                     <button
                       key={index + 1}
-                      onClick={() => setCurrentPage(index + 1)}
-                      className={`text-sm font-medium px-3 py-1 mx-1 rounded ${
+                      onClick={() => {
+                        setCurrentPage(index + 1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className={`text-sm font-medium px-4 py-2 mx-1 rounded-full ${
                         currentPage === index + 1
                           ? `${accentColor} ${accentBgColor}`
-                          : `${textColor} hover:${accentBgColor}`
+                          : `${textColor} ${theme === 'dark' ? 'bg-[#0E1A1F]' : 'bg-[#F8F9FA]'} hover:${accentBgColor}`
                       }`}
                     >
                       {index + 1}
                     </button>
                   ))}
                 </div>
+                
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  onClick={() => {
+                    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   disabled={currentPage === totalPages}
                   className={`flex gap-x-2 items-center ${textColor} ${
-                    currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:text-[#91CC6E]"
+                    currentPage === totalPages ? "opacity-50 cursor-not-allowed" : `${goldHover}`
                   }`}
                 >
                   <span className="text-sm font-medium">Next</span>
@@ -601,446 +727,7 @@ const BlogPage = () => {
 };
 
 export default BlogPage;
-//old 
-// import React, { useEffect, useState } from "react";
-// import { ArrowRight, ArrowLeft } from "lucide-react";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import CommentDetail from "./CommentDetail";
-// import comment from "../Asset/comment.png";
-// import SaveButton from "./SaveButton.jsx";
 
-// const BlogPage = () => {
-//   const [posts, setPosts] = useState([]);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [showCommentDetail, setShowCommentDetail] = useState(false);
-//   const [detailPostId, setDetailPostId] = useState(null);
-//   const [loadingStates, setLoadingStates] = useState({});
-//   const postsPerPage = 4;
-//   const navigate = useNavigate();
-//   const location = useLocation();
 
-//   // Hero section content
-//   const heroContent = [
-//     {
-//       title: "What's New?",
-//       subtitle: "Share Your Best Moment Here",
-//       buttonText: "Start Now",
-//       backgroundImage: "https://assets.vogue.com/photos/5f651e490f204e69b53eacbd/master/pass/VO080119_DESIGNERS_46.jpg"
-//     },
-//     {
-//       title: "Latest Trends",
-//       subtitle: "Discover the newest fashion trends",
-//       buttonText: "Explore Now",
-//       backgroundImage: "https://media.bleacherreport.com/image/upload/v1719242794/teiolpjmhprr7izmwo3f.jpg"
-//     },
-//     {
-//       title: "Men's Fashion",
-//       subtitle: "See the latest in men's style",
-//       buttonText: "View Collection",
-//       backgroundImage: "https://media.glamour.com/photos/66f5c2777e09bc43bcee2067/master/w_2560%2Cc_limit/men%25E2%2580%2599s%2520fashion%2520trends.jpg"
-//     }
-//   ];
 
-//   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
-//   const [nextContentIndex, setNextContentIndex] = useState(1);
-//   const [textAnimation, setTextAnimation] = useState({
-//     fadeOut: false,
-//     slideDirection: 'up'
-//   });
 
-//   // Fetch all posts
-//   useEffect(() => {
-//     const fetchPosts = async () => {
-//       try {
-//         const token = sessionStorage.getItem("token");
-//         const postsResponse = await fetch("http://localhost:5000/posts", {
-//           headers: token ? { Authorization: `Bearer ${token}` } : {}
-//         });
-        
-//         if (!postsResponse.ok) throw new Error("Failed to fetch posts");
-//         let postsData = await postsResponse.json();
-
-//         // Transform the API response
-//         postsData = postsData.map(post => ({
-//           id: post.id,
-//           title: post.title,
-//           content: post.content,
-//           image_url: post.post_image || 'https://res.cloudinary.com/docuoohjc/image/upload/v1743161246/noimage_uhgqfc.jpg',
-//           created_at: post.createdAt,
-//           updated_at: post.updatedAt,
-//           user_name: post.author?.user_name || 'Anonymous',
-//           user_image_url: post.author?.user_image || 'default-user-image-url.jpg',
-//           likes: post.like_count || 0,
-//           comments_count: post.comment_count || 0,
-//           category: post.category?.category_name || 'Uncategorized',
-//           isLiked: post.isLiked || false
-//         }));
-
-//         // Sort posts by creation date (newest first)
-//         const sortedPosts = postsData.sort(
-//           (a, b) => new Date(b.created_at) - new Date(a.created_at)
-//         );
-        
-//         setPosts(sortedPosts);
-//       } catch (error) {
-//         console.error("Error fetching data:", error);
-//       }
-//     };
-    
-//     fetchPosts();
-//   }, []);
-
-//   // Background image and text transition effect
-//   useEffect(() => {
-//     const interval = setInterval(() => {
-//       // Start fading out text with slide effect
-//       setTextAnimation({
-//         fadeOut: true,
-//         slideDirection: 'up'
-//       });
-      
-//       // Change background image after text starts fading
-//       setTimeout(() => {
-//         setCurrentBackgroundIndex(nextContentIndex);
-//         setNextContentIndex((nextContentIndex + 1) % heroContent.length);
-        
-//         // Fade text back in with slide up effect
-//         setTimeout(() => {
-//           setTextAnimation({
-//             fadeOut: false,
-//             slideDirection: 'down'
-//           });
-//         }, 300);
-//       }, 500);
-//     }, 6000); // Total cycle time (6 seconds)
-
-//     return () => clearInterval(interval);
-//   }, [nextContentIndex]);
-
-//   // Like handler
-//   const handleLike = async (postId) => {
-//     const token = sessionStorage.getItem("token");
-//     if (!token) {
-//       navigate("/login", { state: { from: location.pathname } });
-//       return;
-//     }
-
-//     setLoadingStates(prev => ({ ...prev, [postId]: true }));
-
-//     try {
-//       // Optimistic update
-//       setPosts(prevPosts =>
-//         prevPosts.map(post => {
-//           if (post.id === postId) {
-//             const newLikeStatus = !post.isLiked;
-//             return {
-//               ...post,
-//               isLiked: newLikeStatus,
-//               likes: newLikeStatus ? post.likes + 1 : post.likes - 1
-//             };
-//           }
-//           return post;
-//         })
-//       );
-
-//       const response = await fetch(`http://localhost:5000/posts/${postId}/likes`, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${token}`
-//         }
-//       });
-      
-//       if (!response.ok) {
-//         throw new Error('Failed to update like status');
-//       }
-
-//       const data = await response.json();
-      
-//       // Final update with server data
-//       setPosts(prevPosts =>
-//         prevPosts.map(post => {
-//           if (post.id === postId) {
-//             return {
-//               ...post,
-//               isLiked: data.liked,
-//               likes: data.likeCount
-//             };
-//           }
-//           return post;
-//         })
-//       );
-//     } catch (error) {
-//       console.error('Error toggling like:', error);
-//       // Revert optimistic update on error
-//       setPosts(prevPosts =>
-//         prevPosts.map(post => {
-//           if (post.id === postId) {
-//             return {
-//               ...post,
-//               isLiked: !post.isLiked,
-//               likes: post.isLiked ? post.likes - 1 : post.likes + 1
-//             };
-//           }
-//           return post;
-//         })
-//       );
-//       alert('Failed to update like. Please try again.');
-//     } finally {
-//       setLoadingStates(prev => ({ ...prev, [postId]: false }));
-//     }
-//   };
-
-//   // Recent posts for the "Recent blog posts" section
-//   const recentPosts = posts.slice(0, 3);
-  
-//   // Pagination logic
-//   const indexOfLastPost = currentPage * postsPerPage;
-//   const indexOfFirstPost = indexOfLastPost - postsPerPage;
-//   const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
-//   const totalPages = Math.ceil(posts.length / postsPerPage);
-
-//   // Handle comment click
-//   const handleCommentClick = (postId) => {
-//     const token = sessionStorage.getItem("token");
-//     if (!token) {
-//       navigate("/login", { state: { from: location.pathname } });
-//       return;
-//     }
-//     navigate(`/posts/${postId}/comments`);
-//   };
-
-//   return (
-//     <div className="h-full p-1 bg-[#181818] w-full">
-//       {/* Hero Section with Enhanced Transitions */}
-//       <div
-//         className="w-full h-screen relative overflow-hidden"
-//         style={{
-//           backgroundImage: `url(${heroContent[currentBackgroundIndex].backgroundImage})`,
-//           backgroundSize: "contain",
-//           backgroundPosition: "center",
-//           transition: "background-image 1s ease-in-out",
-//         }}
-//       >
-//         <div 
-//           className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-500 ${
-//             textAnimation.fadeOut 
-//               ? `opacity-0 ${textAnimation.slideDirection === 'up' ? 'translate-y-4' : '-translate-y-4'}`
-//               : 'opacity-100 translate-y-0'
-//           }`}
-//         >
-//           <div className="habesha-blog font-semibold text-[#91CC6E] text-lg mb-2 transition-all duration-300">
-//             Our blog
-//           </div>
-//           <div className="text-5xl font-semibold mt-4 text-white transition-all duration-400">
-//             {heroContent[currentBackgroundIndex].title}
-//           </div>
-//           <div className="text-[20px] mt-4 text-[#c0c0c0] transition-all duration-500">
-//             {heroContent[currentBackgroundIndex].subtitle}
-//           </div>
-//           <div className="flex gap-x-4 mt-8 justify-center transition-all duration-600">
-//             <button
-//               className={`w-[118px] h-12 bg-[#91CC6E] font-semibold flex items-center justify-center rounded-lg transition-all duration-300 ${
-//                 textAnimation.fadeOut ? 'scale-90' : 'scale-100'
-//               }`}
-//               onClick={() => navigate("/login")}
-//             >
-//               {heroContent[currentBackgroundIndex].buttonText}
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Rest of your component remains the same */}
-//       {/* Recent Blog Posts Section */}
-//       <div className="font-semibold text-white text-[34px] ml-28 mt-12">
-//         Recent blog posts
-//       </div>
-//       <div className="overflow-hidden w-full px-28 mt-8">
-//         <div className="flex gap-8 animate-scroll">
-//           {recentPosts.map((post) => (
-//             <div key={post.id} className="flex-1 flex flex-col min-w-[300px]">
-//               <div className="w-full h-64">
-//                 <img
-//                   src={post.image_url}
-//                   alt="Blog Post"
-//                   className="w-full h-full object-contain rounded-lg"
-//                   onError={(e) => {
-//                     e.target.src = "https://res.cloudinary.com/docuoohjc/image/upload/v1743161246/noimage_uhgqfc.jpg";
-//                   }}
-//                 />
-//               </div>
-//               <div className="flex items-center justify-between mt-4">
-//                 <div className="text-[#91CC6E] text-sm font-semibold">
-//                   {post.user_name} - {new Date(post.created_at).toLocaleDateString()}
-//                 </div>
-//                 <img
-//                   src={post.user_image_url}
-//                   alt="User Profile"
-//                   className="w-10 h-10 rounded-full"
-//                   onError={(e) => {
-//                     e.target.src = "default-user-image-url.jpg";
-//                   }}
-//                 />
-//               </div>
-//               <div className="text-white text-2xl font-semibold mt-2">
-//                 {post.title}
-//               </div>
-//               <div className="text-[#7B7B7B] mt-2 line-clamp-3">
-//                 {post.content}
-//               </div>
-//               <div className="flex gap-x-2 mt-4">
-//                 <button
-//                   onClick={() => handleLike(post.id)}
-//                   disabled={loadingStates[post.id]}
-//                   className={`text-[#91CC6E] bg-[#91CC6E33] text-sm font-medium flex justify-center items-center px-2.5 py-0.5 rounded-full h-6 ${
-//                     post.isLiked ? "bg-[#91CC6E66]" : ""
-//                   } ${loadingStates[post.id] ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-//                 >
-//                   {post.isLiked ? '❤️' : '♡'} {post.likes}
-//                   {loadingStates[post.id] && <span className="ml-1">...</span>}
-//                 </button>
-//                 <div
-//                   className="text-[#91CC6E] bg-[#91CC6E33] text-sm font-medium flex justify-center items-center px-2.5 py-0.5 rounded-full h-6 cursor-pointer"
-//                   onClick={() => handleCommentClick(post.id)}
-//                 >
-//                   <img src={comment} alt="Comment" />
-//                   <span className="ml-1">{post.comments_count}</span>
-//                 </div>
-//                 <SaveButton postId={post.id} />
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-
-//       {/* All Blog Posts Section */}
-//       <div className="font-semibold text-white text-[34px] ml-28 mt-24">
-//         All Blog Post
-//       </div>
-//       <div className="flex flex-col gap-8 w-full px-28 mt-8">
-//         {currentPosts.map((post) => (
-//           <div key={post.id} className="flex gap-8">
-//             <div className="w-64 flex flex-col items-start">
-//               <img
-//                 src={post.user_image_url}
-//                 alt="User Profile"
-//                 className="w-10 h-10 rounded-full"
-//                 onError={(e) => {
-//                   e.target.src = "default-user-image-url.jpg";
-//                 }}
-//               />
-//               <div className="text-[#91CC6E] text-sm font-semibold mt-2">
-//                 {post.user_name}
-//               </div>
-//               <div className="text-[#7B7B7B] text-sm">
-//                 {new Date(post.created_at).toLocaleDateString()}
-//               </div>
-//               <div className="text-[#91CC6E] text-xs mt-1">
-//                 {post.category}
-//               </div>
-//             </div>
-
-//             <div className="flex-1">
-//               <div className="w-full h-96">
-//                 <img
-//                   src={post.image_url}
-//                   alt="Blog Post"
-//                   className="w-full h-full object-cover rounded-lg"
-//                   onError={(e) => {
-//                     e.target.src = "https://res.cloudinary.com/docuoohjc/image/upload/v1743161246/noimage_uhgqfc.jpg";
-//                   }}
-//                 />
-//               </div>
-//               <div className="text-white text-2xl font-semibold mt-4">
-//                 {post.title}
-//               </div>
-//               <div className="text-[#7B7B7B] mt-2">
-//                 {post.content}
-//               </div>
-//               <div className="flex gap-x-2 mt-4">
-//                 <button
-//                   onClick={() => handleLike(post.id)}
-//                   disabled={loadingStates[post.id]}
-//                   className={`text-[#91CC6E] bg-[#91CC6E33] text-sm font-medium flex justify-center items-center px-2.5 py-0.5 rounded-full h-6 ${
-//                     post.isLiked ? "bg-[#91CC6E66]" : ""
-//                   } ${loadingStates[post.id] ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-//                 >
-//                   {post.isLiked ? '❤️' : '♡'} {post.likes}
-//                   {loadingStates[post.id] && <span className="ml-1">...</span>}
-//                 </button>
-//                 <div
-//                   className="text-[#91CC6E] bg-[#91CC6E33] text-sm font-medium flex justify-center items-center px-2.5 py-0.5 rounded-full h-6 cursor-pointer"
-//                   onClick={() => handleCommentClick(post.id)}
-//                 >
-//                   <img src={comment} alt="Comment" />
-//                   <span className="ml-1">{post.comments_count}</span>
-//                 </div>
-//                 <SaveButton postId={post.id} />
-//               </div>
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Comment Detail Modal */}
-//       {showCommentDetail && (
-//         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-//           <div className="bg-[#282828] rounded-lg p-6 w-1/2 max-h-[80vh] overflow-y-auto">
-//             <button 
-//               onClick={() => setShowCommentDetail(false)}
-//               className="text-white float-right mb-4"
-//             >
-//               ×
-//             </button>
-//             <CommentDetail postId={detailPostId} />
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Pagination Section */}
-//       <div className="bg-white w-[1216px] h-px ml-28 mt-16" />
-//       <div className="flex items-center justify-between h-fit w-auto mt-5 mx-28">
-//         <button
-//           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-//           disabled={currentPage === 1}
-//           className={`flex gap-x-2 items-center ${
-//             currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-//           }`}
-//         >
-//           <ArrowLeft className="text-white w-[22px] h-[22px]" />
-//           <div className="text-white text-sm font-medium">Previous</div>
-//         </button>
-        
-//         <div className="flex">
-//           {Array.from({ length: totalPages }, (_, index) => (
-//             <button
-//               key={index + 1}
-//               onClick={() => setCurrentPage(index + 1)}
-//               className={`text-sm font-medium px-4 py-2 ${
-//                 currentPage === index + 1
-//                   ? "text-[#91CC6E] bg-[#91CC6E33]"
-//                   : "text-white"
-//               }`}
-//             >
-//               {index + 1}
-//             </button>
-//           ))}
-//         </div>
-        
-//         <button
-//           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-//           disabled={currentPage === totalPages}
-//           className={`flex gap-x-2 items-center ${
-//             currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
-//           }`}
-//         >
-//           <div className="text-white text-sm font-medium">Next</div>
-//           <ArrowRight className="text-white w-[22px] h-[22px]" />
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default BlogPage;

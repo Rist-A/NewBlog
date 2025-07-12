@@ -33,6 +33,5 @@ const PostTags = sequelize.define("PostTags", {
   ]
 });
 
-// No need for associations here as they're handled in Tag and Post models
 
 module.exports = PostTags;

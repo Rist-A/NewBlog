@@ -17,12 +17,6 @@ const UserRole = sequelize.define("UserRole", {
   tableName: 'user_roles' // optional: explicit table name
 });
 
-// UserRole.associate = function(models) {
-//   // Define the one-to-many relationship with User
-//   UserRole.hasMany(models.User, {
-//     foreignKey: 'role_id',
-//     as: 'users' // optional: alias for the association
-//   });
-// };
+
 
 module.exports = UserRole;

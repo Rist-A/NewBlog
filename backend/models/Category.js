@@ -27,21 +27,10 @@ const Category = sequelize.define("Category", {
   paranoid: true, // Enables soft deletion
   defaultScope: {
     attributes: {
-      exclude: ['createdAt', 'updatedAt', 'deletedAt'] // Exclude timestamps by default
+      exclude: ['createdAt', 'updatedAt', 'deletedAt'] 
     }
   }
 });
 
-// Category.associate = function(models) {
-//   Category.hasMany(models.Post, {
-//     foreignKey: {
-//       name: 'category_id',
-//       allowNull: false // Ensures a post must have a category
-//     },
-//     as: 'posts',
-//     onDelete: 'RESTRICT' // Prevent category deletion if posts exist
-//     // Alternatively use 'CASCADE' to delete all posts when category is deleted
-//   });
-// };
 
 module.exports = Category;

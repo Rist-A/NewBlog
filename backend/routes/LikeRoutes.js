@@ -10,6 +10,6 @@ router.delete('/posts/:postId/likes', likeController.deleteLike);
 router.post('/posts/:postId/likes', likeController.toggleLike);
 
 // Check if user has liked a post
-//router.get('/posts/:postId/likes/check', authMiddleware, likeController.checkLikeStatus);
+
 
 module.exports = router;

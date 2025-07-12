@@ -29,7 +29,7 @@ const Comment = sequelize.define("Comment", {
     },
     onDelete: 'CASCADE' // Delete comment when post is deleted
   },
-  author_id: {  // Renamed from user_id to be more explicit
+  author_id: { 
     type: DataTypes.UUID,
     allowNull: false,
     references: {
@@ -43,19 +43,5 @@ const Comment = sequelize.define("Comment", {
   tableName: 'comments',
   //paranoid: true // Optional: enables soft deletion
 });
-
-// Comment.associate = function(models) {
-//   Comment.belongsTo(models.Post, {
-//     foreignKey: 'post_id',
-//     as: 'post',
-//     onDelete: 'CASCADE'
-//   });
-
-//   Comment.belongsTo(models.User, {
-//     foreignKey: 'author_id',
-//     as: 'author',
-//     onDelete: 'CASCADE'
-//   });
-// };
 
 module.exports = Comment;

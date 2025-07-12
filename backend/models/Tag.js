@@ -20,15 +20,6 @@ const Tag = sequelize.define("Tag", {
   tableName: 'tags'  // Optional explicit table name
 });
 
-// Define the many-to-many association with Post
-// Tag.associate = function(models) {
-//   // A Tag can belong to many Posts through the PostTags junction table
-//   Tag.belongsToMany(models.Post, {
-//     through: 'PostTags',  // Name of the junction table
-//     foreignKey: 'tag_id',  // Foreign key in the junction table pointing to Tag
-//     otherKey: 'post_id',   // Foreign key in the junction table pointing to Post
-//     as: 'posts'  // Optional alias for when eager loading
-//   });
-// };
+
 
 module.exports = Tag;

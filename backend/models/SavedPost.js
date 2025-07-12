@@ -46,18 +46,7 @@ SavedPost.associate = function(models) {
     as: 'user'
   });
   
-  // Optional: You can also add these associations to User and Post models
-  // User.belongsToMany(models.Post, {
-  //   through: 'SavedPost',
-  //   as: 'savedPosts',
-  //   foreignKey: 'user_id'
-  // });
-  //
-  // Post.belongsToMany(models.User, {
-  //   through: 'SavedPost',
-  //   as: 'savedByUsers',
-  //   foreignKey: 'post_id'
-  // });
+
 };
 
 module.exports = SavedPost;

@@ -7,6 +7,8 @@ import { Popover, PopoverTrigger, PopoverContent } from "@radix-ui/react-popover
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useTheme } from "../ThemeContext";
+import logo from "../Asset/Habesha_Community.jpg"
+import nael from "../Asset/nael.png"
 
 const NavigationBar = ({ onLogoClick = () => {} }) => {
   const [user, setUser] = useState(null);
@@ -74,10 +76,7 @@ const NavigationBar = ({ onLogoClick = () => {} }) => {
     ];
 
     if (user.role === "admin") {
-      baseLinks.push(
-        { name: "Categories", path: "/categories" },
-        { name: "Tags", path: "/tags" }
-      );
+    
     }
 
     if (user.role === "subadmin") {
@@ -181,12 +180,10 @@ const NavigationBar = ({ onLogoClick = () => {} }) => {
                 className="flex items-center gap-2"
               >
                 {/* Replace with your actual logo */}
-                <div className={`w-8 h-8 rounded-md ${
-                  theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'
-                } flex items-center justify-center text-white font-bold`}>
-                  HB
+                <div className={`w-8 h-8 rounded-md flex items-center justify-center text-white font-bold`}>
+                  <img src={nael} alt="" />
                 </div>
-                <span className="font-bold text-lg hidden sm:block">Habesha Blog</span>
+                <span className="habesha-blog font-bold text-xs hidden sm:block text-green ">Habesha Blog</span>
               </Link>
             </motion.div>
           </div>
@@ -271,13 +268,14 @@ const NavigationBar = ({ onLogoClick = () => {} }) => {
                       Profile
                     </Link>
                     <Link 
-                      to="/settings" 
+                      to="/chat" 
                       className={`px-4 py-2 rounded-md text-sm transition-colors ${
                         theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
                       }`}
                     >
-                      Settings
+                      support
                     </Link>
+                   
                     <button 
                       onClick={handleLogout}
                       className={`px-4 py-2 rounded-md text-left text-sm transition-colors ${
@@ -402,187 +400,3 @@ const NavigationBar = ({ onLogoClick = () => {} }) => {
 
 export default NavigationBar;
 
-//old
-
-// import React, { useState, useEffect } from "react";
-// import { Link, useNavigate } from "react-router-dom";
-// import { Sun, Moon } from "lucide-react";
-// import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
-// import { Popover, PopoverTrigger, PopoverContent } from "@radix-ui/react-popover";
-// import axios from "axios";
-// import { jwtDecode } from "jwt-decode";
-// import create from "../Asset/create.png";
-
-// const NavigationBar = ({ onLogoClick = () => {} }) => {
-//   const [user, setUser] = useState(null);
-//   const [theme, setTheme] = useState("dark");
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     const fetchUserData = async () => {
-//       const token = sessionStorage.getItem("token");
-//       if (token) {
-//         try {
-//           const decoded = jwtDecode(token);
-          
-//           // Set user data from token including Cloudinary image URL
-//           setUser({
-//             id: decoded.id,
-//             role: decoded.role,
-//             user_name: decoded.user_name,
-//             user_image: decoded.user_image // This should contain the Cloudinary URL
-//           });
-
-//           // Optional: If you need to verify/fetch additional data
-//           try {
-//             const response = await axios.get(`http://localhost:5000/user/${decoded.id}`, {
-//               headers: { Authorization: `Bearer ${token}` }
-//             });
-//             setUser(prev => ({ 
-//               ...prev, 
-//               ...response.data.user,
-//               // Ensure we don't override the image with null if the API doesn't return one
-//               user_image: response.data.user.user_image || prev.user_image
-//             }));
-//           } catch (apiError) {
-//             console.error("Additional user fetch failed, using token data:", apiError);
-//           }
-//         } catch (error) {
-//           console.error("Error decoding token:", error);
-//         }
-//       }
-//     };
-
-//     fetchUserData();
-//   }, []);
-
-//   // Role-based navigation links
-//   const getNavLinks = () => {
-//     if (!user) {
-//       return [
-//         { name: "Login", path: "/login" },
-//         { name: "About us", path: "/register" }
-//       ];
-//     }
-
-//     const baseLinks = [
-//       { name: "Home", path: "/" },
-//       { name: "Create Post", path: "/create", icon: create }
-//     ];
-
-//     if (user.role === "admin") {
-//       baseLinks.push(
-//         { name: "Manage Categories", path: "/categories" },
-//         { name: "Manage Tags", path: "/tags" }
-//       );
-//     }
-
-//     if (user.role === "subadmin") {
-//       baseLinks.push(
-//         { name: "Manage Tags", path: "/tags" }
-//       );
-//     }
-
-//     return baseLinks;
-//   };
-
-//   const handleLogout = async () => {
-//     try {
-//       await axios.post("http://localhost:5000/logout");
-//       sessionStorage.removeItem("token");
-//       setUser(null);
-//       navigate("/login");
-//     } catch (error) {
-//       console.error("Logout error:", error);
-//     }
-//   };
-
-//   // Function to handle Cloudinary image transformations
-//   const getOptimizedImageUrl = (url) => {
-//     if (!url) return null;
-    
-//     // Skip if already transformed
-//     if (url.includes('upload/') && 
-//         (url.includes('w_') || url.includes('h_'))) {
-//       return url;
-//     }
-  
-//     // Force 24x24px (matches Tailwind's w-6)
-//     return url.replace('/upload/', '/upload/w_24,h_24,c_fill,g_face,f_auto,q_auto/');
-//   };
-
-//   return (
-//     <div className="bg-transparent text-white py-2 px-4 fixed top-0 left-0 w-full z-50">
-//     <div className="container mx-auto flex justify-between items-center h-12 backdrop-blur-md">
-  
-//       <Link to="/" onClick={onLogoClick} className="habesha-blog">
-//         Habesha Blog
-//       </Link>
-
-
-//         <div className="flex items-center gap-6">
-//           {getNavLinks().map((link) => (
-//             <Link 
-//               key={link.name}
-//               to={link.path}
-//               className="hover:text-blue-300 transition-colors"
-//             >
-//               {link.icon ? (
-//                 <img src={link.icon} alt={link.name} className="w-6 h-6" />
-//               ) : (
-//                 link.name
-//               )}
-//             </Link>
-//           ))}
-
-//           {user && (
-//             <Popover>
-//               <PopoverTrigger className="focus:outline-none">
-//               <Avatar className="w-6 h-6 rounded-full cursor-pointer border border-gray-400 hover:border-blue-300 transition-all">
-//   {user.user_image ? (
-//     <AvatarImage 
-//       src={getOptimizedImageUrl(user.user_image)} 
-//       alt={user.user_name}
-//       className="w-full h-full object-cover rounded-full"
-//     />
-//   ) : null}
-//   <AvatarFallback className="flex items-center justify-center bg-gray-600 text-white w-full h-full rounded-full text-xs">
-//     {user.user_name?.charAt(0).toUpperCase() || "U"}
-//   </AvatarFallback>
-// </Avatar>
-//               </PopoverTrigger>
-//               <PopoverContent 
-//                 className="bg-white text-black p-2 rounded shadow-lg z-50 min-w-[150px]"
-//                 align="end"
-//                 sideOffset={5}
-//               >
-//                 <div className="flex flex-col gap-1">
-//                   <Link 
-//                     to="/profile" 
-//                     className="hover:bg-gray-100 p-2 rounded text-sm transition-colors"
-//                   >
-//                     Your Profile
-//                   </Link>
-//                   <Link 
-//                     to="/" 
-//                     className="hover:bg-gray-100 p-2 rounded text-sm transition-colors"
-//                   >
-//                     Setting
-//                   </Link>
-//                   <button 
-//                     onClick={handleLogout}
-//                     className="hover:bg-gray-100 p-2 rounded text-left text-sm transition-colors"
-//                   >
-//                     Logout
-//                   </button>
-//                 </div>
-//               </PopoverContent>
-//             </Popover>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default NavigationBar; 

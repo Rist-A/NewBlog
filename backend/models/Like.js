@@ -16,7 +16,7 @@ const Like = sequelize.define("Like", {
     },
     onDelete: 'CASCADE' // Like will be deleted if post is deleted
   },
-  author_id: {  // Changed from user_id to author_id for consistency
+  author_id: {  
     type: DataTypes.UUID,
     allowNull: false,
     references: {
@@ -35,16 +35,6 @@ const Like = sequelize.define("Like", {
   }]
 });
 
-// Like.associate = function(models) {
-//   Like.belongsTo(models.Post, {
-//     foreignKey: 'post_id',
-//     as: 'post'
-//   });
 
-//   Like.belongsTo(models.User, {
-//     foreignKey: 'author_id',
-//     as: 'author'
-//   });
-// };
 
 module.exports = Like;

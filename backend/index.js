@@ -17,15 +17,14 @@ const PostRoutes = require('./routes/PostRoutes.js');
 const LikeRoutes = require('./routes/LikeRoutes.js')
 const tagRoutes =require('./routes/tagRoutes.js')
 const SavedPost = require('./models/SavedPost.js')
+const openai = require("./routes/openai.js")
 const express = require('express');
 const SavedPostRoutes = require('./routes/SavedPostRoutes.js')
 const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 const ProfileRoutes = require('./routes/ProfileRoutes.js');
-const openAIRoutes= require('./routes/openai.js')
 
 //POST http://localhost:5000/posts/d8683c36-79fc-4964-a108-35567b07155b/save
-
 
 const app = express();
 app.use(express.json());
@@ -37,13 +36,14 @@ app.use(cors({
   allowedHeaders: 'Content-Type,Authorization'
 }));
 
+
+
 // Cloudinary config
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-REACT_APP_OPENAI_KEY: process.env.REACT_APP_OPENAI_KEY;
 
 // Define all associations in one place
 function setupAssociations() {
@@ -212,7 +212,8 @@ app.use('/',SavedPostRoutes);
 app.use('/', ProfileRoutes);
 app.use('/',CategoryRoutes);
 app.use('/',tagRoutes)
-app.use('/api/openai', openAIRoutes);
+app.use("/api/openai", openai);
+
 
 // Start everything
 startServer();

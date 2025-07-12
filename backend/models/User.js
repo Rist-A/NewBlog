@@ -33,7 +33,7 @@ const User = sequelize.define("User", {
     allowNull: false,
     defaultValue: '123e4567-e89b-12d3-a456-426614174000', 
     references: {
-      model: 'user_roles',  // Corrected to match UserRole's tableName
+      model: 'user_roles',  
       key: 'id'
     }
   }
@@ -42,31 +42,5 @@ const User = sequelize.define("User", {
   tableName: 'users'
 });
 
-// User.associate = function(models) {
-//   // Corrected association
-//   User.belongsTo(models.UserRole, {
-//     foreignKey: 'role_id',
-//     targetKey: 'id',
-//     as: 'role'
-//   });
-
-//   // Other associations remain unchanged
-//   User.hasMany(models.Comment, {
-//     foreignKey: 'author_id',
-//     as: 'comments',
-//     onDelete: 'CASCADE'
-//   });
-
-//   User.hasMany(models.Like, {
-//     foreignKey: 'author_id',
-//     as: 'likes',
-//     onDelete: 'CASCADE'
-//   });
-
-//   User.hasMany(models.Post, {
-//     foreignKey: 'author_id',
-//     as: 'posts'
-//   });
-// };
 
 module.exports = User;

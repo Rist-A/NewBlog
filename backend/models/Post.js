@@ -71,43 +71,5 @@ const Post = sequelize.define("Post", {
   paranoid: true // Enable soft deletion
 });
 
-// Post.associate = function(models) {
-//   // Relationships with User
-//   Post.belongsTo(models.User, {
-//     foreignKey: 'author_id',
-//     as: 'author',
-//     onDelete: 'CASCADE'
-//   });
-
-//   // Relationships with Category
-//   Post.belongsTo(models.Category, {
-//     foreignKey: 'category_id',
-//     as: 'category',
-//     onDelete: 'RESTRICT'
-//   });
-
-//   // Relationships with Tags (many-to-many)
-//   Post.belongsToMany(models.Tag, {
-//     through: models.PostTags,
-//     foreignKey: 'post_id',
-//     otherKey: 'tag_id',
-//     as: 'tags',
-//     onDelete: 'CASCADE'
-//   });
-
-//   // Relationships with Comments
-//   Post.hasMany(models.Comment, {
-//     foreignKey: 'post_id',
-//     as: 'comments',
-//     onDelete: 'CASCADE'
-//   });
-
-//   // Relationships with Likes
-//   Post.hasMany(models.Like, {
-//     foreignKey: 'post_id',
-//     as: 'likes',
-//     onDelete: 'CASCADE'
-//   });
-// };
 
 module.exports = Post;

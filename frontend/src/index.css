@@ -70,8 +70,8 @@ body {
 
 .habesha-blog {
   font-family: 'head', sans-serif;
-  font-size: 2rem;
-  color: white;
+  font-size: 1rem;
+  color: [#f8b300];
 }
 
 /* global.css */
